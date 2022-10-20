@@ -99,11 +99,11 @@ void staff_menue() {
 
 
 
+// staff registration 
 
 void staff_register() {
     string username, password, admin_username, admin_pass;
 
-    //------------------>        continue from here     <-----------
     cout << "Enter Username : " << endl;
     cin >> username;
     cout << "Enter password : " << endl;
@@ -115,12 +115,18 @@ void staff_register() {
     ad_file >> admin_username;
     ad_file >> admin_pass;
 
+
     if (admin_username == username && admin_pass == password) {
 
 
         cout << "access granted" << endl;
 
+
+        // using sqlite3 database
         try {
+
+            //create database if not exist
+
             sqlite3* db;
             sqlite3_stmt* stmt;
             char* messageError;
@@ -142,6 +148,9 @@ void staff_register() {
                 sqlite3_free(messageError);
             }
             else {
+
+                //inserting employee into the database
+
                 string employee_name, employee_username, employee_password;
                 cout << "Enter Employee Name : " << endl;
                 cin >> employee_name;
