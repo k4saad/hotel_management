@@ -9,7 +9,8 @@ date        :   10/12/2022
 #include<sqlite3.h>
 #include<fstream>
 using namespace std;
-const char* database = "HOTEL.db";
+string database = "HOTEL.db";
+
 
 
 //function declaration
@@ -17,6 +18,7 @@ void main_menue();
 void staff_menue();
 void staff_register();
 void staff_login();
+void employee_menue();
 
 
 //class for room in a hotel
@@ -123,7 +125,6 @@ void staff_register() {
 
         //opening of database for registering employee
 
-        string database = "HOTEL.db";
         sqlite3* db;
         int statusOfOpen = sqlite3_open(database.c_str(), &db);
         if (statusOfOpen == SQLITE_OK) {
@@ -178,7 +179,7 @@ void staff_register() {
             sqlite3_finalize(myStatement);
         }
         else {
-            cout << "Error opening in database" << endl;
+            cout << "Error opening database" << endl;
         }
 
     }
@@ -188,122 +189,49 @@ void staff_register() {
     }
 }
 
-//done till here
-
-/*
-        // using sqlite3 database
-        try {
-
-            //create database if not exist
-
-            sqlite3* db;
-            sqlite3_stmt* stmt;
-            char* messageError;
-            sqlite3_open(database, &db);
-            string sql_employee_register = "CREATE TABLE IF NOT EXISTS EMPLOYEE ("
-		    "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
-		    "NAME TEXT NOT NULL, "
-		    "USER_NAME TEXT NOT NULL, "
-		    "PASSWORD TEXT NOT NULL );";  
-
-
-            int exit = 0;
-            exit = sqlite3_open(database, &db);
-
-            // An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here 
-            exit = sqlite3_exec(db, sql_employee_register.c_str(), 0, &stmt, &messageError);
-            if (exit != SQLITE_OK) {
-                cerr << "cannot open database" << endl;
-                sqlite3_free(messageError);
-            }
-            else {
-
-                //inserting employee into the database
-
-                string employee_name, employee_username, employee_password;
-                cout << "Enter Employee Name : " << endl;
-                cin >> employee_name;
-                cout << "Enter Employee username : " << endl;
-                cin >> employee_username;
-                cout << "Enter Employee password :  " << endl;
-                cin >> employee_password;
-
-
-                sqlite3* db;
-                char* messageError;
-
-                string sql_insert_employee = "INSERT INTO Employee (NAME,USER_NAME, PASSWORD) VALUES('" + employee_name + "','" + employee_username + "','" + employee_password +"');";
-                int exit = sqlite3_open(database, &db);
-                 An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here 
-                exit = sqlite3_exec(db, sql_insert_employee.c_str(), NULL, 0, &messageError);
-                if (exit != SQLITE_OK) {
-                    cerr << "Error in insertData function." << endl;
-                    sqlite3_free(messageError);
-                }
-                else {
-                    cout << "Records inserted Successfully!" << endl;
-
-
-
-                }
-                sqlite3_close(db);
-            }
-
-
-        }
-        catch (const exception& e)
-        {
-            cerr << e.what();
-        }
-
-*/
 
 
 
 void staff_login() {
-    /*
-    string username, password;
+    
+    string username, password, eName;
 
     cout << "Enter Username : " << endl;
     cin >> username;
     cout << "Enter password : " << endl;
     cin >> password;
-
     
-        try {
-            sqlite3* db;
-            sqlite3_stmt* stmt;
-            char* messageError;
-            sqlite3_open(database, &db);
-            string sql_employee_login = "SELECT USER_NAME, PASSWORD FROM EMPLOYEE WHERE USER_NAME='" + username + "'AND password ='" + password + "';";
-
-            //below code is for reference 
-            //compare value of username and password from user with USER_NAME and PASSWORD from database
-
-            int exit = 0;
-            exit = sqlite3_open(database, &db);
-
-            // An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here
-            exit = sqlite3_exec(db, sql_employee_login.c_str(), 0, &stmt, &messageError);
-            if (exit != SQLITE_OK) {
-                cerr << "\n\t\t\tinvalid username or password\n" << endl;
-                sqlite3_free(messageError);
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT employee.name FROM employee WHERE username=(?) AND password=(?);", -1, &myStatement, NULL);
+        sqlite3_bind_text(myStatement, 1, username.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(myStatement, 2, password.c_str(), -1, SQLITE_STATIC);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_ROW) {
+                eName = (char*) sqlite3_column_text(myStatement, 0);
+                cout << "Welcome " << eName << endl;
+                employee_menue();
             }
             else {
-                cout << "Welcome " << username;
-                sqlite3_close(db);
+                cout << "No user found" << endl;
             }
-
-
         }
-        catch (const exception& e)
-        {
-            cerr << e.what();
+        else {
+            cout << "Error preparing select statement" << endl;
         }
+    }
+    else {
+        cout << "Error opening database" << endl;
+    }
+       
+}
 
-
-
-        */
+void employee_menue() {
+    cout << "hello saad khan" << endl;
+    //nothings
 }
     
     
