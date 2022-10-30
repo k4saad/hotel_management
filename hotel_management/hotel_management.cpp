@@ -26,6 +26,8 @@ void employee_menue();
 void room_opr();
 void add_room();
 void delete_room();
+void all_room();
+void food_opr();
 
 
 
@@ -109,7 +111,7 @@ void admin_login() {
         cout << "access granted" << endl;
     label_3:
         cout << "\t\t\t------------------------------------------------------------" << endl;
-        cout << "\t\t\t                            STAFF                           " << endl;
+        cout << "\t\t\t                           ADMIN MENUE                      " << endl;
         cout << "\t\t\t------------------------------------------------------------" << endl;
         cout << "\t\t\t  1)  Register                                              " << endl;
         cout << "\t\t\t  2)  All Employee                                          " << endl;
@@ -298,7 +300,7 @@ label_4:
         room_opr();
         break;
     case 2:
-        //food_opr();
+        food_opr();
         break;
     case 3:
         //report();
@@ -316,7 +318,7 @@ void room_opr() {
     int employee_choice;
 label_5:
     cout << "\t\t\t------------------------------------------------------------" << endl;
-    cout << "\t\t\t                            STAFF                           " << endl;
+    cout << "\t\t\t                            ROOM                            " << endl;
     cout << "\t\t\t------------------------------------------------------------" << endl;
     cout << "\t\t\t  1)  Add Room                                              " << endl;
     cout << "\t\t\t  2)  Delete Room                                           " << endl;
@@ -331,7 +333,7 @@ label_5:
         delete_room();
         break;
     case 3:
-        //all_room();
+        all_room();
     case 4:
         employee_menue();
     default:
@@ -414,7 +416,7 @@ void add_room() {
 }
 
 
-//update room
+//delete room
 void delete_room() {
 
 
@@ -467,18 +469,90 @@ void delete_room() {
             else {
                 cout << "No room found or deleted" << endl;
             }
+            sqlite3_finalize(myStatement);
         }
         else {
             cout << "Error preparing delete statement" << endl;
         }
-
-
         sqlite3_close(db);
     }
     else {
         cout << "Error in opening of database" << endl;
     }
 
+}
+//to see all available rooms
+void all_room() {
+
+    int rId, rSize, rCapacity, rPrice;
+    string rName, rDiscription, rBedSize;
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT room.id, room.name, room.capacity, room.price, room.roomsize, room.bedsize, room.discription FROM room ORDER BY room.id", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            while (statusOfStep == SQLITE_ROW) {
+
+                rId = sqlite3_column_int(myStatement, 0);
+                rName = (char*)sqlite3_column_text(myStatement, 1);
+                rCapacity = sqlite3_column_int(myStatement, 2);
+                rPrice = sqlite3_column_int(myStatement, 3);
+                rSize = sqlite3_column_int(myStatement, 4);
+                rBedSize = (char*)sqlite3_column_text(myStatement, 5);
+                rDiscription = (char*)sqlite3_column_text(myStatement, 6);
+
+                cout << "---------------------------" << endl;
+                cout << "Room id : " << rId << endl;
+                cout << "Room name : " << rName << endl;
+                cout << "Room capacity : " << rCapacity << " guests" << endl;
+                cout << "Room price : " << rPrice << " rate / night" << endl;
+                cout << "Room size : " << rSize << " sq mt" << endl;
+                cout << "Bed size : " << rBedSize << " size" << endl;
+                cout << "Room Discription : " << rDiscription << endl;
+                statusOfStep = sqlite3_step(myStatement);
+
+            }
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing select statement" << endl;
+        }
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening of database" << endl;
+    }
+}
+
+void food_opr() {
+
+    int employee_choice;
+label_6:
+    cout << "\t\t\t------------------------------------------------------------" << endl;
+    cout << "\t\t\t                            FOOD                            " << endl;
+    cout << "\t\t\t------------------------------------------------------------" << endl;
+    cout << "\t\t\t  1)  Add Food                                              " << endl;
+    cout << "\t\t\t  2)  Delete Food                                           " << endl;
+    cout << "\t\t\t  3)  All Food                                              " << endl;
+    cout << "\t\t\t  4)  Back                                                  " << endl;
+    cin >> employee_choice;
+    switch (employee_choice) {
+    case 1:
+        //add_food();
+        break;
+    case 2:
+        //delete_food();
+        break;
+    case 3:
+        //all_food();
+    case 4:
+        employee_menue();
+    default:
+        cout << "Please enter valid input" << endl;
+    }
+    goto label_6;
 }
 
 int main() {
