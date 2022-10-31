@@ -36,7 +36,9 @@ void ledger();
 void room_income();
 void food_income();
 void all_income();
-
+//guest part
+void guest_menue();
+void book_room();
 
 
 
@@ -47,7 +49,7 @@ void main_menue() {
     int main_choice;
 label_1:
     cout << "\t\t\t------------------------------------------------------------" << endl;
-    cout << "\t\t\t                     Welcome To Saad's Hotel                " << endl;
+    cout << "\t\t\t                          Main Menue                        " << endl;
     cout << "\t\t\t------------------------------------------------------------" << endl;
     cout << "\t\t\t  1)  Staff                                                 " << endl;
     cout << "\t\t\t  2)  Guest                                                 " << endl;
@@ -58,7 +60,7 @@ label_1:
         staff_menue();
         break;
     case 2:
-        //void guest_menue();
+        guest_menue();
         break;
     case 3:
         exit(1);
@@ -715,7 +717,7 @@ void delete_food() {
         }
         
         string fName;
-        cout << "Enter food name to be deleted" << endl;
+        cout << "\nEnter food name to be deleted" << endl;
         cin.ignore();
         getline(cin, fName);
         
@@ -961,6 +963,37 @@ void all_income() {
     else {
         cout << "Error in opening of database" << endl;
     }
+}
+
+//guest menue
+void guest_menue() {
+    int guest_choice;
+label_7:
+    cout << "\t\t\t------------------------------------------------------------" << endl;
+    cout << "\t\t\t                    Welcome To Saad's Hotel                 " << endl;
+    cout << "\t\t\t------------------------------------------------------------" << endl;
+    cout << "\t\t\t  1)  Book Room                                             " << endl;
+    cout << "\t\t\t  2)  Order Food                                            " << endl;
+    cout << "\t\t\t  3)  Back                                                  " << endl;
+    cin >> guest_choice;
+    switch (guest_choice) {
+    case 1:
+        book_room();
+        break;
+    case 2:
+        //order_food();
+        break;
+    case 3:
+        main_menue();
+    default:
+        cout << "Please enter valid input" << endl;
+    }
+    goto label_7;
+
+}
+
+void book_room() {
+
 }
 
 
