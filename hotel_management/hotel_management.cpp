@@ -32,6 +32,10 @@ void food_opr();
 void add_food();
 void delete_food();
 void all_food();
+void ledger();
+void room_income();
+void food_income();
+void all_income();
 
 
 
@@ -356,7 +360,7 @@ label_4:
     cout << "\t\t\t------------------------------------------------------------" << endl;
     cout << "\t\t\t  1)  Room                                                  " << endl;
     cout << "\t\t\t  2)  Food                                                  " << endl;
-    cout << "\t\t\t  3)  Report                                                " << endl;
+    cout << "\t\t\t  3)  Ledger                                                " << endl;
     cout << "\t\t\t  4)  Back                                                  " << endl;
     cin >> employee_choice;
     switch (employee_choice) {
@@ -367,7 +371,7 @@ label_4:
         food_opr();
         break;
     case 3:
-        //report();
+        ledger();
     case 4:
         staff_menue();
     default:
@@ -590,6 +594,7 @@ void all_room() {
     }
 }
 
+//food menue
 void food_opr() {
 
     int employee_choice;
@@ -678,7 +683,7 @@ void add_food() {
     }
 }
 
-
+//delete food
 void delete_food() {
     sqlite3* db;
     int statusOfOpen = sqlite3_open(database.c_str(), &db);
@@ -733,6 +738,7 @@ void delete_food() {
     }
 }
 
+//to see all food available
 void all_food() {
     cout << "All Food" << endl;
     sqlite3* db;
@@ -769,6 +775,194 @@ void all_food() {
         cout << "Error in opening of database" << endl;
     }
 }
+
+//all income report
+void ledger() {
+
+    int employee_choice;
+label_6:
+    cout << "\t\t\t------------------------------------------------------------" << endl;
+    cout << "\t\t\t                            LEDGER                          " << endl;
+    cout << "\t\t\t------------------------------------------------------------" << endl;
+    cout << "\t\t\t  1)  Room Income                                           " << endl;
+    cout << "\t\t\t  2)  Food Income                                           " << endl;
+    cout << "\t\t\t  3)  All Income                                            " << endl;
+    cout << "\t\t\t  4)  Back                                                  " << endl;
+    cin >> employee_choice;
+    switch (employee_choice) {
+    case 1:
+        room_income();
+        break;
+    case 2:
+        food_income();
+        break;
+    case 3:
+        all_income();
+    case 4:
+        employee_menue();
+    default:
+        cout << "Please enter valid input" << endl;
+    }
+    goto label_6;
+}
+
+
+
+void room_income() {
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        int statusOfPrep = sqlite3_prepare_v2(db, "CREATE TABLE IF NOT EXISTS income(name TEXT, quantity INTEGER, amount INTEGER, dept TEXT)", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_DONE) {
+                cout << "Successfully accessed income table" << endl;
+            }
+            else {
+                cout << "Error creating income table" << endl;
+            }
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing create statement" << endl;
+        }
+        string proName;
+        int proQuantity, proIncome, totalIncome=0;
+        statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'room'", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            while (statusOfStep == SQLITE_ROW) {
+                proName = (char*)sqlite3_column_text(myStatement, 0);
+                proQuantity = sqlite3_column_int(myStatement, 1);
+                proIncome = sqlite3_column_int(myStatement, 2);
+                totalIncome = totalIncome + proIncome * proQuantity;
+                cout << "---------------------------" << endl;
+                cout << "Room Name : " << proName << endl;
+                cout << "Nights : " << proQuantity << endl;
+                cout << "Income : " << proIncome << endl;
+               
+                statusOfStep = sqlite3_step(myStatement);
+            }
+            
+            cout << "Total Income : " << totalIncome << endl;
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing select statement" << endl;
+        }
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening of database" << endl;
+    }
+}
+
+
+void food_income() {
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        int statusOfPrep = sqlite3_prepare_v2(db, "CREATE TABLE IF NOT EXISTS income(name TEXT, quantity INTEGER, amount INTEGER, dept TEXT)", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_DONE) {
+                cout << "Successfully accessed income table" << endl;
+            }
+            else {
+                cout << "Error creating income table" << endl;
+            }
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing create statement" << endl;
+        }
+        string proName;
+        int proQuantity, proIncome, totalIncome = 0;
+        statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'food' ", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            while (statusOfStep == SQLITE_ROW) {
+                proName = (char*)sqlite3_column_text(myStatement, 0);
+                proQuantity = sqlite3_column_int(myStatement, 1);
+                proIncome = sqlite3_column_int(myStatement, 2);
+                totalIncome = totalIncome + proIncome * proQuantity;
+                cout << "---------------------------" << endl;
+                cout << "Food Name : " << proName << endl;
+                cout << "Quantity : " << proQuantity << endl;
+                cout << "Income : " << proIncome << endl;
+
+                statusOfStep = sqlite3_step(myStatement);
+            }
+
+            cout << "Total Income : " << totalIncome << endl;
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing select statement" << endl;
+        }
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening of database" << endl;
+    }
+}
+
+void all_income() {
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        int statusOfPrep = sqlite3_prepare_v2(db, "CREATE TABLE IF NOT EXISTS income(name TEXT, quantity INTEGER, amount INTEGER, dept TEXT)", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_DONE) {
+                cout << "Successfully accessed income table" << endl;
+            }
+            else {
+                cout << "Error creating income table" << endl;
+            }
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing create statement" << endl;
+        }
+        int proQuantity, proIncome, totalIncome = 0;
+        statusOfPrep = sqlite3_prepare_v2(db, "SELECT quantity, amount from income", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+           
+            while (statusOfStep == SQLITE_ROW) {
+               
+                proQuantity = sqlite3_column_int(myStatement, 0);
+                proIncome = sqlite3_column_int(myStatement, 1);
+                totalIncome = totalIncome + proIncome * proQuantity;
+                                
+                statusOfStep = sqlite3_step(myStatement);
+            }
+            cout << "------------------------------------------" << endl;
+            cout << "Total Income : " << totalIncome << endl;
+            cout << "------------------------------------------" << endl;
+
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing select statement" << endl;
+        }
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening of database" << endl;
+    }
+}
+
 
 int main() {
     main_menue();
