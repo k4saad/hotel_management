@@ -20,6 +20,7 @@ void main_menue();
 void staff_menue();
 void admin_login();
 void staff_register();
+void delete_employee();
 void all_employee();
 void staff_login();
 void employee_menue();
@@ -28,6 +29,9 @@ void add_room();
 void delete_room();
 void all_room();
 void food_opr();
+void add_food();
+void delete_food();
+void all_food();
 
 
 
@@ -55,7 +59,7 @@ label_1:
     case 3:
         exit(1);
     default:
-        cout << "Please enter valid input" << endl;
+        cout<< "Please enter valid input" << endl;
     }
     goto label_1;
 }
@@ -114,17 +118,20 @@ void admin_login() {
         cout << "\t\t\t                           ADMIN MENUE                      " << endl;
         cout << "\t\t\t------------------------------------------------------------" << endl;
         cout << "\t\t\t  1)  Register                                              " << endl;
-        cout << "\t\t\t  2)  All Employee                                          " << endl;
-        cout << "\t\t\t  3)  Back                                                  " << endl;
+        cout << "\t\t\t  2)  Delete Employee                                       " << endl;
+        cout << "\t\t\t  3)  All Employee                                          " << endl;
+        cout << "\t\t\t  4)  Back                                                  " << endl;
         cin >> admin_choice;
         switch (admin_choice) {
         case 1:
             staff_register();
             break;
         case 2:
+            delete_employee();
+        case 3:
             all_employee();
             break;
-        case 3:
+        case 4:
             staff_menue();
         default:
             cout << "Please enter valid input" << endl;
@@ -204,6 +211,62 @@ void staff_register() {
 
 }
 
+//delete employee
+void delete_employee() {
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT employee.id, employee.name, employee.username, employee.password FROM employee ORDER BY employee.id", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int empId;
+            string empName, empUsername, empPassword;
+            int statusOfStep = sqlite3_step(myStatement);
+            while (statusOfStep == SQLITE_ROW) {
+                empId = sqlite3_column_int(myStatement, 0);
+                empName = (char*)sqlite3_column_text(myStatement, 1);
+                empUsername = (char*)sqlite3_column_text(myStatement, 2);
+                empPassword = (char*)sqlite3_column_text(myStatement, 3);
+
+                cout << "---------------------------" << endl;
+                cout << "Id : " << empId << endl;
+                cout << "Name : " << empName << endl;
+                cout << "Username : " << empUsername << endl;
+                cout << "Password : " << empPassword << endl;
+
+                statusOfStep = sqlite3_step(myStatement);
+            }
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing a select statement" << endl;
+        }
+        int empId;
+        cout << "\nEnter id of employee to be deleted : " << endl;
+        cin >> empId;
+        statusOfPrep = sqlite3_prepare_v2(db, "DELETE FROM employee WHERE id = (?);", -1, &myStatement, NULL);
+        sqlite3_bind_int(myStatement, 1, empId);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_DONE) {
+                cout << "Employee with id : " << empId << " deleted" << endl;
+            }
+            else {
+                cout << "No Empolyee found or deleted" << endl;
+            }
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing delete statement" << endl;
+        }
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening database" << endl;
+    }
+}
+
+
 
 void all_employee() {
     cout << "\nAll employee" << endl;
@@ -241,6 +304,7 @@ void all_employee() {
         cout << "Error in opening database" << endl;
     }
 }
+
 
 void staff_login() {
 
@@ -353,7 +417,7 @@ void add_room() {
         if (statusOfPrep == SQLITE_OK) {
             int statusOfStep = sqlite3_step(myStatement);
             if (statusOfStep == SQLITE_DONE) {
-                cout << "Successfully created room table" << endl;
+                cout << "Successfully accessed room table" << endl;
             }
             else {
                 cout << "Error creating room table" << endl;
@@ -443,7 +507,7 @@ void delete_room() {
                 cout << "Room id : " << rId <<endl;
                 cout << "Room name : " << rName << endl;
                 cout << "Room capacity : " << rCapacity << " guests" << endl;
-                cout << "Room price : " << rPrice << " rate / night" << endl;
+                cout << "Room price : " << rPrice << " Rupees / night" << endl;
                 cout << "Room size : " << rSize << " sq mt" << endl;
                 cout << "Bed size : " << rBedSize << " size" << endl;
                 cout << "Room Discription : "<< rDiscription << endl;
@@ -483,7 +547,7 @@ void delete_room() {
 }
 //to see all available rooms
 void all_room() {
-
+    cout << "All Room" << endl;
     int rId, rSize, rCapacity, rPrice;
     string rName, rDiscription, rBedSize;
     sqlite3* db;
@@ -540,19 +604,170 @@ label_6:
     cin >> employee_choice;
     switch (employee_choice) {
     case 1:
-        //add_food();
+        add_food();
         break;
     case 2:
-        //delete_food();
+        delete_food();
         break;
     case 3:
-        //all_food();
+        all_food();
     case 4:
         employee_menue();
     default:
         cout << "Please enter valid input" << endl;
     }
     goto label_6;
+}
+
+//to add food
+void add_food() {
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        int statusOfPrep = sqlite3_prepare_v2(db, "CREATE TABLE IF NOT EXISTS food(name TEXT PRIMARY KEY, type TEXT, price INTEGER)", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_DONE) {
+                cout << "food table acccessed" << endl;
+            }
+            else {
+                cout << "Error accessing food table" << endl;
+            }
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error in preparing create statement" << endl;
+        }
+        string fName, fType;
+        int fPrice;
+        cout << "\t\t\t---Enter food details---" << endl;
+        cout << "Food Name : " << endl;
+        cin.ignore();
+        getline(cin, fName);
+        label_7:
+        cout << "Food Type ( soup, starter, main course )  : " << endl;
+        cin.ignore();
+        getline(cin, fType);
+        cout << "Food Price : " << endl;
+        cin >> fPrice;
+
+        statusOfPrep = sqlite3_prepare_v2(db, "INSERT INTO food VALUES(?,?,?)", -1, &myStatement, NULL);
+        sqlite3_bind_text(myStatement, 1, fName.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(myStatement, 2, fType.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int(myStatement, 3, fPrice);
+
+
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_DONE) {
+                cout << "Successfully added food " << endl;
+            }
+            else {
+                cout << "Error in adding food " << endl;
+            }
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error in preparing create statement" << endl;
+        }
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening of database" << endl;
+    }
+}
+
+
+void delete_food() {
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+        
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT food.name, food.type, food.price FROM food ORDER BY food.type", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            string fName, fType;
+            int fPrice;
+            int statusOfStep = sqlite3_step(myStatement);
+            while (statusOfStep == SQLITE_ROW) {
+                fName = (char*)sqlite3_column_text(myStatement, 0);
+                fType = (char*)sqlite3_column_text(myStatement, 1);
+                fPrice = sqlite3_column_int(myStatement, 2);
+                cout << "---------------------------" << endl;
+                
+                cout << "Food name : " << fName << endl;
+                cout << "Food type : " << fType << endl;
+                cout << "Food price : " << fPrice << " per plate" << endl;
+                statusOfStep = sqlite3_step(myStatement);
+
+            }
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error Preparing select statement" << endl;
+        }
+        
+        string fName;
+        cout << "Enter food name to be deleted" << endl;
+        cin.ignore();
+        getline(cin, fName);
+        
+        statusOfPrep = sqlite3_prepare_v2(db, "DELETE FROM food WHERE name = (?)", -1, &myStatement, NULL);
+        sqlite3_bind_text(myStatement, 1, fName.c_str(), -1, SQLITE_STATIC);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            if (statusOfStep == SQLITE_DONE) {
+                cout << fName << " successfully deleted" << endl;
+            }
+        }
+        else {
+            cout << "Error preparing delete statement" << endl;
+        }
+
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening of database" << endl;
+    }
+}
+
+void all_food() {
+    cout << "All Food" << endl;
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT food.name, food.type, food.price FROM food ORDER BY food.type", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            string fName, fType;
+            int fPrice;
+            int statusOfStep = sqlite3_step(myStatement);
+            while (statusOfStep == SQLITE_ROW) {
+                fName = (char*)sqlite3_column_text(myStatement, 0);
+                fType = (char*)sqlite3_column_text(myStatement, 1);
+                fPrice = sqlite3_column_int(myStatement, 2);
+                cout << "---------------------------" << endl;
+
+                cout << "Food name : " << fName << endl;
+                cout << "Food type : " << fType << endl;
+                cout << "Food price : " << fPrice << " Rupees" << endl;
+                statusOfStep = sqlite3_step(myStatement);
+
+            }
+
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error Preparing select statement" << endl;
+        }
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening of database" << endl;
+    }
 }
 
 int main() {
