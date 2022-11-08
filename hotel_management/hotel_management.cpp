@@ -39,6 +39,7 @@ void all_income();
 //guest part
 void guest_menue();
 void book_room();
+void order_food();
 
 
 
@@ -652,10 +653,8 @@ void add_food() {
         cout << "Food Name : " << endl;
         cin.ignore();
         getline(cin, fName);
-        label_7:
-        cout << "Food Type ( soup, starter, main course )  : " << endl;
-        cin.ignore();
-        getline(cin, fType);
+        cout << "Food Type ( soup, starter, entree )  : " << endl;
+        cin >> fType;
         cout << "Food Price : " << endl;
         cin >> fPrice;
 
@@ -815,24 +814,9 @@ void room_income() {
     int statusOfOpen = sqlite3_open(database.c_str(), &db);
     if (statusOfOpen == SQLITE_OK) {
         sqlite3_stmt* myStatement;
-        int statusOfPrep = sqlite3_prepare_v2(db, "CREATE TABLE IF NOT EXISTS income(name TEXT, quantity INTEGER, amount INTEGER, dept TEXT)", -1, &myStatement, NULL);
-        if (statusOfPrep == SQLITE_OK) {
-            int statusOfStep = sqlite3_step(myStatement);
-            if (statusOfStep == SQLITE_DONE) {
-                cout << "Successfully accessed income table" << endl;
-            }
-            else {
-                cout << "Error creating income table" << endl;
-            }
-
-            sqlite3_finalize(myStatement);
-        }
-        else {
-            cout << "Error preparing create statement" << endl;
-        }
         string proName;
         int proQuantity, proIncome, totalIncome=0;
-        statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'room'", -1, &myStatement, NULL);
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'room'", -1, &myStatement, NULL);
         if (statusOfPrep == SQLITE_OK) {
             int statusOfStep = sqlite3_step(myStatement);
             while (statusOfStep == SQLITE_ROW) {
@@ -868,24 +852,9 @@ void food_income() {
     int statusOfOpen = sqlite3_open(database.c_str(), &db);
     if (statusOfOpen == SQLITE_OK) {
         sqlite3_stmt* myStatement;
-        int statusOfPrep = sqlite3_prepare_v2(db, "CREATE TABLE IF NOT EXISTS income(name TEXT, quantity INTEGER, amount INTEGER, dept TEXT)", -1, &myStatement, NULL);
-        if (statusOfPrep == SQLITE_OK) {
-            int statusOfStep = sqlite3_step(myStatement);
-            if (statusOfStep == SQLITE_DONE) {
-                cout << "Successfully accessed income table" << endl;
-            }
-            else {
-                cout << "Error creating income table" << endl;
-            }
-
-            sqlite3_finalize(myStatement);
-        }
-        else {
-            cout << "Error preparing create statement" << endl;
-        }
         string proName;
         int proQuantity, proIncome, totalIncome = 0;
-        statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'food' ", -1, &myStatement, NULL);
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'food' ", -1, &myStatement, NULL);
         if (statusOfPrep == SQLITE_OK) {
             int statusOfStep = sqlite3_step(myStatement);
             while (statusOfStep == SQLITE_ROW) {
@@ -981,7 +950,7 @@ label_7:
         book_room();
         break;
     case 2:
-        //order_food();
+        order_food();
         break;
     case 3:
         main_menue();
@@ -994,6 +963,79 @@ label_7:
 
 void book_room() {
 
+}
+
+void order_food() {
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+        sqlite3_stmt* myStatement;
+
+        //getting food from database for food menue
+
+        string fName;
+        int fPrice;
+        int statusOfPrep = sqlite3_prepare_v2(db, "SELECT food.name, food.price FROM food ORDER BY food.type", -1, &myStatement, NULL);
+        if (statusOfPrep == SQLITE_OK) {
+            int statusOfStep = sqlite3_step(myStatement);
+            cout << "\n\n+---------------------------MENUE---------------------------+" << endl;
+            cout << "\tNAME\t\t\t\t" << "PRICE\n" << endl;
+            while (statusOfStep == SQLITE_ROW) {
+                fName = (char*)sqlite3_column_text(myStatement, 0);
+                fPrice = sqlite3_column_int(myStatement, 1);
+                cout << "\t" << fName << "\t\t\t\t" << fPrice << endl;
+                statusOfStep = sqlite3_step(myStatement);
+            }
+            cout << "+-----------------------------------------------------------+\n\n" << endl;
+            sqlite3_finalize(myStatement);
+        }
+        else {
+            cout << "Error preparing select statement " << endl;
+        }
+        
+        //taking user input 
+
+        int n = 0, user_choice = 1;
+        string cfName, cfName_arr[10];
+        int cfQuantity, cfQuantity_arr[10]={ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },cfPrice[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        while (user_choice) {
+            if (n == 10) {
+                cout << "You can only order 10 item at a time" << endl;
+                break;
+            }
+            cout << "Enter Food name : " << endl;
+            cin >> cfName;
+            cout << "Enter Quantity : " << endl;
+            cin >> cfQuantity;
+            statusOfPrep = sqlite3_prepare_v2(db, "SELECT food.price FROM food WHERE food.name=(?)", -1, &myStatement, NULL);
+            sqlite3_bind_text(myStatement, 1, cfName.c_str(), -1, SQLITE_STATIC);
+            if (statusOfPrep == SQLITE_OK) {
+                int statusOfStep = sqlite3_step(myStatement);
+                if (statusOfStep == SQLITE_ROW) {
+                    cfPrice[n] = sqlite3_column_int(myStatement, 0);
+                    cfQuantity_arr[n] = cfQuantity;
+                    cfName_arr[n] = cfName;
+                    cout <<cfQuantity<<" " << cfName << " ordered." << endl;
+                }
+                else {
+                    cout << cfName << " is not available." << endl;
+                }
+            }
+            else {
+                cout << "Error preparing user input select statement" << endl;
+            }
+            cout << "For recipt press 0 or to continue press 1" << endl;
+            cin >> user_choice;
+        }
+
+        //print recipt for order above
+
+
+        sqlite3_close(db);
+    }
+    else {
+        cout << "Error in opening database" << endl;
+    }
 }
 
 
