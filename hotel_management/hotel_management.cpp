@@ -35,7 +35,7 @@ void all_food();
 void ledger();
 void room_income();
 void food_income();
-void all_income();
+void total_income();
 //guest part
 void guest_menue();
 void book_room();
@@ -787,7 +787,7 @@ label_6:
     cout << "\t\t\t------------------------------------------------------------" << endl;
     cout << "\t\t\t  1)  Room Income                                           " << endl;
     cout << "\t\t\t  2)  Food Income                                           " << endl;
-    cout << "\t\t\t  3)  All Income                                            " << endl;
+    cout << "\t\t\t  3)  Total Income                                            " << endl;
     cout << "\t\t\t  4)  Back                                                  " << endl;
     cin >> employee_choice;
     switch (employee_choice) {
@@ -798,7 +798,7 @@ label_6:
         food_income();
         break;
     case 3:
-        all_income();
+        total_income();
     case 4:
         employee_menue();
     default:
@@ -870,7 +870,10 @@ void food_income() {
                 statusOfStep = sqlite3_step(myStatement);
             }
 
-            cout << "Total Income : " << totalIncome << endl;
+            cout << "\n------------------------------------------" << endl;
+            cout << "Total Income : " << totalIncome <<" Rs" << endl;
+            cout << "------------------------------------------\n\n" << endl;
+            
 
             sqlite3_finalize(myStatement);
         }
@@ -884,7 +887,7 @@ void food_income() {
     }
 }
 
-void all_income() {
+void total_income() {
     sqlite3* db;
     int statusOfOpen = sqlite3_open(database.c_str(), &db);
     if (statusOfOpen == SQLITE_OK) {
@@ -917,8 +920,8 @@ void all_income() {
                                 
                 statusOfStep = sqlite3_step(myStatement);
             }
-            cout << "------------------------------------------" << endl;
-            cout << "Total Income : " << totalIncome << endl;
+            cout << "\n------------------------------------------" << endl;
+            cout << "Total Income : " << totalIncome <<" Rs" << endl;
             cout << "------------------------------------------" << endl;
 
 
@@ -997,7 +1000,7 @@ void order_food() {
 
         int n = 0, user_choice = 1;
         string cfName, cfName_arr[10];
-        int cfQuantity, cfQuantity_arr[10]={ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },cfPrice[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        int cfQuantity, cfQuantity_arr[10]={ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },cfPrice_arr[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         while (user_choice) {
             if (n == 10) {
                 cout << "You can only order 10 item at a time" << endl;
@@ -1012,23 +1015,75 @@ void order_food() {
             if (statusOfPrep == SQLITE_OK) {
                 int statusOfStep = sqlite3_step(myStatement);
                 if (statusOfStep == SQLITE_ROW) {
-                    cfPrice[n] = sqlite3_column_int(myStatement, 0);
+                    cfPrice_arr[n] = sqlite3_column_int(myStatement, 0);
                     cfQuantity_arr[n] = cfQuantity;
                     cfName_arr[n] = cfName;
                     cout <<cfQuantity<<" " << cfName << " ordered." << endl;
                 }
                 else {
                     cout << cfName << " is not available." << endl;
+                    n--;//to neutralize on failure
                 }
+                sqlite3_finalize(myStatement);
             }
             else {
                 cout << "Error preparing user input select statement" << endl;
             }
             cout << "For recipt press 0 or to continue press 1" << endl;
             cin >> user_choice;
+            n++;
+        }
+        //entry to the income database
+        n = 0;
+        
+        string dept = "food";   //dept used in food income function
+
+        while (cfPrice_arr[n]) {
+            if (n == 10) {
+                break;
+            }
+            statusOfPrep = sqlite3_prepare_v2(db, "INSERT INTO income VALUES(?,?,?,?)", -1, &myStatement, NULL);
+            sqlite3_bind_text(myStatement, 1, cfName_arr[n].c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(myStatement, 2, cfQuantity_arr[n]);
+            sqlite3_bind_int(myStatement, 3, cfPrice_arr[n]);
+            sqlite3_bind_text(myStatement, 4, dept.c_str(), -1, SQLITE_STATIC);
+            if (statusOfPrep == SQLITE_OK) {
+                int statusOfStep = sqlite3_step(myStatement);
+                if (statusOfStep == SQLITE_DONE) {
+                    //for debugging
+                    //cout << cfName_arr[n] << " inserted" << endl;
+
+                }
+                else {
+                    cout << "Error inserting in income ledger" << endl;
+                }
+                sqlite3_finalize(myStatement);
+            }
+            else {
+                cout << "Error preparing insert statement" << endl;
+            }
+            n++;
         }
 
         //print recipt for order above
+        n = 0;
+        int cfTotal=0;
+        if (cfPrice_arr[n]) {
+            cfTotal = cfTotal + cfPrice_arr[n] * cfQuantity_arr[n];
+            cout << "\n\n\t+----------------------RECIPT----------------------+" << endl;
+            cout << "\t  NAME\t\t" << "PRICE\t\t" << "QUANTITY\n" << endl;
+            while (cfPrice_arr[n]) {
+                cout << "\t" << cfName_arr[n] << "\t\t" << cfPrice_arr[n] << "\t\t" << cfQuantity_arr[n] << endl;
+                n++;
+            }
+            n = 0;
+            
+            cout << "\n\nGrand Total : " << cfTotal << "\n\n" << endl;
+
+        }
+        else{
+            cout << "No food selected" << endl;
+        }
 
 
         sqlite3_close(db);
