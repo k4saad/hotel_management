@@ -441,7 +441,8 @@ void add_room() {
         cout << "Room id : " << endl;
         cin >> rId;
         cout << "Room name : " << endl;
-        cin >> rName;
+        cin.ignore();
+        getline(cin, rName);
         cout << "Room capacity : " << endl;
         cin >> rCapacity;
         cout << "Room rate/night : " << endl;
@@ -535,7 +536,7 @@ void delete_room() {
         if (statusOfPrep == SQLITE_OK) {
             int statusOfStep = sqlite3_step(myStatement);
             if (statusOfStep == SQLITE_DONE) {
-                cout << "Room with id : " << rId << " deleted" << endl;
+                cout << "Room with id " << rId << " deleted" << endl;
             }
             else {
                 cout << "No room found or deleted" << endl;
@@ -578,7 +579,7 @@ void all_room() {
                 cout << "Room id : " << rId << endl;
                 cout << "Room name : " << rName << endl;
                 cout << "Room capacity : " << rCapacity << " guests" << endl;
-                cout << "Room price : " << rPrice << " rate / night" << endl;
+                cout << "Room price : " << rPrice << " rupees / night" << endl;
                 cout << "Room size : " << rSize << " sq mt" << endl;
                 cout << "Bed size : " << rBedSize << " size" << endl;
                 cout << "Room Discription : " << rDiscription << endl;
@@ -966,7 +967,68 @@ label_7:
 
 void book_room() {
 
+    sqlite3* db;
+    int statusOfOpen = sqlite3_open(database.c_str(), &db);
+    if (statusOfOpen == SQLITE_OK) {
+
+        //taking no. of guest and fetching all room with or greater guest capacity  
+
+        int roomId, roomSize, roomCapacity, roomPrice, noOfGuest;
+        string roomName, roomDiscription, roomBedSize;
+    label_10:
+        cout << "Number of Guest : " << endl;
+        cin >> noOfGuest;
+
+        if (noOfGuest > 0) {
+            sqlite3_stmt* myStatement;
+            int statusOfPrep = sqlite3_prepare_v2(db, "SELECT room.id, room.name, room.capacity, room.price, room.roomsize, room.bedsize, room.discription FROM room WHERE room.capacity >= (?) ORDER BY room.capacity", -1, &myStatement, NULL);
+            sqlite3_bind_int(myStatement, 1, noOfGuest);
+            if (statusOfPrep == SQLITE_OK) {
+                int statusOfStep = sqlite3_step(myStatement);
+                cout << "\n\n+---------------------------AVAILABLE ROOMS---------------------------+" << endl;
+                if (statusOfStep != SQLITE_ROW) {
+                    cout << "No room available" << endl;
+                }
+                else {
+                    while (statusOfStep == SQLITE_ROW) {
+                        roomId = sqlite3_column_int(myStatement, 0);
+                        roomName = (char*)sqlite3_column_text(myStatement, 1);
+                        roomCapacity = sqlite3_column_int(myStatement, 2);
+                        roomPrice = sqlite3_column_int(myStatement, 3);
+                        roomSize = sqlite3_column_int(myStatement, 4);
+                        roomBedSize = (char*)sqlite3_column_text(myStatement, 5);
+                        roomDiscription = (char*)sqlite3_column_text(myStatement, 6);
+
+                        cout << "Room id : " << roomId << "\tName : " << roomName << endl;
+                        cout << "\t\tcapacity : " << roomCapacity << " guests" << endl;
+                        cout << "\t\tprice : " << roomPrice << " rupees / night" << endl;
+                        cout << "\t\tsize : " << roomSize << " sq mt" << endl;
+                        cout << "\t\tBed size : " << roomBedSize << " size" << endl;
+                        cout << "\t\tDiscription: " << roomDiscription << endl;
+                        cout << "---------------------------+" << endl;
+
+                        statusOfStep = sqlite3_step(myStatement);
+                    }
+                }
+                cout << "+-----------------------------------------------------------------------+\n\n" << endl;
+                sqlite3_finalize(myStatement);
+            }
+            else {
+                cout << "Error preparing select statement" << endl;
+            }
+        }
+        else {
+            cout << "Please enter valid number of guests" << endl;
+            goto label_10;
+        }
+    }
+
+    else {
+        cout << "Error in opening database" << endl;
+    }
 }
+
+
 
 void order_food() {
     sqlite3* db;
