@@ -1016,11 +1016,49 @@ void book_room() {
             else {
                 cout << "Error preparing select statement" << endl;
             }
+
+            //To accept customer choice room id and accept number of night 
+            int crId = 0, numberOfNight;
+        label_11:
+            cout << "\nEnter room id : " << endl;
+            cin >> crId;
+            cout << "Number of night : " << endl;
+            cin >> numberOfNight;
+
+            int crPrice;
+            string crName;
+
+            //fetching information about selected room 
+            
+            statusOfPrep = sqlite3_prepare_v2(db, "SELECT room.name, room.price FROM room WHERE room.id = (?)", -1, &myStatement, NULL);
+            sqlite3_bind_int(myStatement, 1, crId);
+            if (statusOfPrep == SQLITE_OK) {
+                int statusOfStep = sqlite3_step(myStatement);
+                if (statusOfStep == SQLITE_ROW) {
+                    crName = (char*)sqlite3_column_text(myStatement, 0);
+                    crPrice = sqlite3_column_int(myStatement, 1);
+
+                    cout << "Room : " << crName << " booked" << endl;
+                }
+                else {
+                    cout << "No room with " << crId << " found" << endl;
+                    goto label_11;
+                }
+                sqlite3_finalize(myStatement);
+            }
+            else {
+                cout << "Error preparing select statement" << endl;
+            }
+
+            // Entry to the income table
+                
+
         }
         else {
             cout << "Please enter valid number of guests" << endl;
             goto label_10;
         }
+        
     }
 
     else {
@@ -1095,7 +1133,7 @@ void order_food() {
             cin >> user_choice;
             n++;
         }
-        //entry to the income database
+        //entry to the income table
         n = 0;
         
         string dept = "food";   //dept used in food income function
