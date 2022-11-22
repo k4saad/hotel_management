@@ -788,7 +788,7 @@ label_6:
     cout << "\t\t\t------------------------------------------------------------" << endl;
     cout << "\t\t\t  1)  Room Income                                           " << endl;
     cout << "\t\t\t  2)  Food Income                                           " << endl;
-    cout << "\t\t\t  3)  Total Income                                            " << endl;
+    cout << "\t\t\t  3)  Total Income                                          " << endl;
     cout << "\t\t\t  4)  Back                                                  " << endl;
     cin >> employee_choice;
     switch (employee_choice) {
@@ -816,24 +816,27 @@ void room_income() {
     if (statusOfOpen == SQLITE_OK) {
         sqlite3_stmt* myStatement;
         string proName;
-        int proQuantity, proIncome, totalIncome=0;
+        int proQuantity, proIncome, proPrice, totalIncome = 0;
         int statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'room'", -1, &myStatement, NULL);
         if (statusOfPrep == SQLITE_OK) {
             int statusOfStep = sqlite3_step(myStatement);
             while (statusOfStep == SQLITE_ROW) {
                 proName = (char*)sqlite3_column_text(myStatement, 0);
                 proQuantity = sqlite3_column_int(myStatement, 1);
-                proIncome = sqlite3_column_int(myStatement, 2);
-                totalIncome = totalIncome + proIncome * proQuantity;
+                proPrice = sqlite3_column_int(myStatement, 2);
+                proIncome = proPrice * proQuantity;
+                totalIncome = totalIncome + proIncome;
                 cout << "---------------------------" << endl;
                 cout << "Room Name : " << proName << endl;
-                cout << "Nights : " << proQuantity << endl;
-                cout << "Income : " << proIncome << endl;
-               
+                cout << "Nights : " << proQuantity << " nights" << endl;
+                cout << "Price : " << proPrice <<" Rs / night" << endl;
+                cout << "Income : " << proIncome << " Rs" << endl;
                 statusOfStep = sqlite3_step(myStatement);
             }
-            
-            cout << "Total Income : " << totalIncome << endl;
+
+            cout << "\n------------------------------------------" << endl;
+            cout << "Total Income : " << totalIncome << " Rs" << endl;
+            cout << "------------------------------------------\n\n" << endl;
 
             sqlite3_finalize(myStatement);
         }
@@ -854,19 +857,21 @@ void food_income() {
     if (statusOfOpen == SQLITE_OK) {
         sqlite3_stmt* myStatement;
         string proName;
-        int proQuantity, proIncome, totalIncome = 0;
+        int proQuantity, proIncome,proPrice, totalIncome = 0;
         int statusOfPrep = sqlite3_prepare_v2(db, "SELECT name, quantity, amount from income WHERE dept = 'food' ", -1, &myStatement, NULL);
         if (statusOfPrep == SQLITE_OK) {
             int statusOfStep = sqlite3_step(myStatement);
             while (statusOfStep == SQLITE_ROW) {
                 proName = (char*)sqlite3_column_text(myStatement, 0);
                 proQuantity = sqlite3_column_int(myStatement, 1);
-                proIncome = sqlite3_column_int(myStatement, 2);
-                totalIncome = totalIncome + proIncome * proQuantity;
+                proPrice = sqlite3_column_int(myStatement, 2);
+                proIncome = proPrice * proQuantity;
+                totalIncome = totalIncome + proIncome;
                 cout << "---------------------------" << endl;
                 cout << "Food Name : " << proName << endl;
                 cout << "Quantity : " << proQuantity << endl;
-                cout << "Income : " << proIncome << endl;
+                cout << "price : " << proPrice << " Rs" << endl;
+                cout << "Income : " << proIncome << " Rs" << endl;
 
                 statusOfStep = sqlite3_step(myStatement);
             }
@@ -988,6 +993,7 @@ void book_room() {
                 cout << "\n\n+---------------------------AVAILABLE ROOMS---------------------------+" << endl;
                 if (statusOfStep != SQLITE_ROW) {
                     cout << "No room available" << endl;
+                    return;
                 }
                 else {
                     while (statusOfStep == SQLITE_ROW) {
@@ -1018,9 +1024,15 @@ void book_room() {
             }
 
             //To accept customer choice room id and accept number of night 
-            int crId = 0, numberOfNight;
+            int crId = 0, numberOfNight, customerChoice;
+
         label_11:
-            cout << "\nEnter room id : " << endl;
+            cout << "\nEnter 0 to retrun back or 1 to continue :  " << endl;
+            cin >> customerChoice;
+            if (customerChoice == 0) {
+                return;
+            }
+            cout << "Enter room id : " << endl;
             cin >> crId;
             cout << "Number of night : " << endl;
             cin >> numberOfNight;
@@ -1037,11 +1049,16 @@ void book_room() {
                 if (statusOfStep == SQLITE_ROW) {
                     crName = (char*)sqlite3_column_text(myStatement, 0);
                     crPrice = sqlite3_column_int(myStatement, 1);
-
-                    cout << "Room : " << crName << " booked" << endl;
+                    cout << "\n\n\t+----------------------RECIPT----------------------+\n" << endl;
+                    cout << "\tRoom : " << crName << " booked" << endl;
+                    cout << "\tPrice : " << crPrice << " rupees / night" << endl;
+                    cout << "\tNumber of night : " << numberOfNight << endl;
+                    cout << "\tTotal payable amount : " << crPrice * numberOfNight << endl;
+                    cout << "\n\t+--------------------------------------------------+\n" << endl;
                 }
+
                 else {
-                    cout << "No room with " << crId << " found" << endl;
+                    cout << "No room with room id " << crId << " found" << endl;
                     goto label_11;
                 }
                 sqlite3_finalize(myStatement);
@@ -1051,8 +1068,26 @@ void book_room() {
             }
 
             // Entry to the income table
-                
-
+            string dept = "room";
+            
+            statusOfPrep = sqlite3_prepare_v2(db, "INSERT INTO income VALUES(?,?,?,?)", -1, &myStatement, NULL);
+            sqlite3_bind_text(myStatement, 1, crName.c_str(), -1, SQLITE_STATIC);
+            sqlite3_bind_int(myStatement, 2, numberOfNight);
+            sqlite3_bind_int(myStatement, 3, crPrice);
+            sqlite3_bind_text(myStatement, 4, dept.c_str(), -1, SQLITE_STATIC);
+            if (statusOfPrep == SQLITE_OK) {
+                int statusOfStep = sqlite3_step(myStatement);
+                if (statusOfStep == SQLITE_DONE) {
+                    //done
+                }
+                else {
+                    cout << "Error inserting values in income table" << endl;
+                }
+                sqlite3_finalize(myStatement);
+            }
+            else {
+                cout << "Error preparing insert statement" << endl;
+            }
         }
         else {
             cout << "Please enter valid number of guests" << endl;
@@ -1098,9 +1133,14 @@ void order_food() {
         
         //taking user input 
 
-        int n = 0, user_choice = 1;
+        int n = 0, user_choice;
         string cfName, cfName_arr[10];
         int cfQuantity, cfQuantity_arr[10]={ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },cfPrice_arr[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        cout << "\nEnter 0 to retrun back or 1 to continue :  " << endl;
+        cin >> user_choice;
+        if (user_choice == 0) {
+            return;
+        }
         while (user_choice) {
             if (n == 10) {
                 cout << "You can only order 10 item at a time" << endl;
@@ -1155,7 +1195,7 @@ void order_food() {
 
                 }
                 else {
-                    cout << "Error inserting in income ledger" << endl;
+                    cout << "Error inserting in income table" << endl;
                 }
                 sqlite3_finalize(myStatement);
             }
@@ -1173,12 +1213,13 @@ void order_food() {
             cout << "\n\n\t+----------------------RECIPT----------------------+" << endl;
             cout << "\t  NAME\t\t" << "PRICE\t\t" << "QUANTITY\n" << endl;
             while (cfPrice_arr[n]) {
-                cout << "\t" << cfName_arr[n] << "\t\t" << cfPrice_arr[n] << "\t\t" << cfQuantity_arr[n] << endl;
+                cout << "\t " << cfName_arr[n] << "\t\t" << cfPrice_arr[n] << " Rs" << "\t\t" << cfQuantity_arr[n] << endl;
                 n++;
             }
             n = 0;
-            
-            cout << "\n\nGrand Total : " << cfTotal << "\n\n" << endl;
+
+            cout << "\t+--------------------------------------------------+" << endl;
+            cout << "\n\nGrand Total : " << cfTotal << " Rs" << "\n\n" << endl;
 
         }
         else{
