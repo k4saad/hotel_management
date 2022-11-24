@@ -18,7 +18,7 @@ Add, delete and see all rooms and foods provided by the hotel
 Order food and reserve a room
 
 ## How to use
-1)  Make admin_file.txt and store username and password for employee
+1)  Make admin_file.txt and store username and password for admin
 2)  Login as admin and add new staff
 3)  Login as staff and add room, food, and run all income function ( must run one time ).
 4)  Now program is good to go.   :)
